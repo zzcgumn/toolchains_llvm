@@ -100,6 +100,13 @@ llvm.toolchain(
     enable_cpp_modules = True,
     llvm_versions = LLVM_VERSIONS,
 )
+# Share the already-downloaded LLVM distribution with llvm_toolchain to avoid
+# a redundant fetch. The cpp_modules toolchain only differs in its
+# configuration (wrapper script, flag set); the LLVM binaries are identical.
+llvm.toolchain_root(
+    name = "llvm_toolchain_cpp_modules",
+    label = "@llvm_toolchain_llvm//:BUILD",
+)
 use_repo(llvm, "llvm_toolchain_cpp_modules")
 
 # Example toolchain with user provided URLs.
