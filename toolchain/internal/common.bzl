@@ -39,6 +39,7 @@ _toolchain_tools = {
     name: name
     for name in [
         "clang-cpp",
+        "clang-scan-deps",
         "clang-format",
         "clang-tidy",
         "clangd",

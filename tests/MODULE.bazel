@@ -91,6 +91,17 @@ use_repo(llvm, "llvm_toolchain_cxx20")
 
 register_toolchains("@llvm_toolchain_cxx20//:all")
 
+# Toolchain for testing experimental C++ module support
+# (--experimental_cpp_modules). Not registered globally; activate via
+# --extra_toolchains=@llvm_toolchain_cpp_modules//:all.
+llvm.toolchain(
+    name = "llvm_toolchain_cpp_modules",
+    cxx_standard = {"": "c++20"},
+    enable_cpp_modules = True,
+    llvm_versions = LLVM_VERSIONS,
+)
+use_repo(llvm, "llvm_toolchain_cpp_modules")
+
 # Example toolchain with user provided URLs.
 # TODO(siddharthab): Add test.
 llvm.toolchain(

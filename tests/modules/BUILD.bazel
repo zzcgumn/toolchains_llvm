@@ -1,0 +1,19 @@
+load("@rules_cc//cc:defs.bzl", "cc_binary", "cc_library")
+
+# These targets require --experimental_cpp_modules and the
+# llvm_toolchain_cpp_modules toolchain (enable_cpp_modules = True).
+# They are tagged "manual" so they do not run under bazel test //...
+# without explicit opt-in.
+
+cc_library(
+    name = "hello",
+    module_interfaces = ["hello.cppm"],
+    tags = ["manual"],
+)
+
+cc_binary(
+    name = "main",
+    srcs = ["main.cc"],
+    tags = ["manual"],
+    deps = [":hello"],
+)

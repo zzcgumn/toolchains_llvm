@@ -194,6 +194,7 @@ def llvm_config_impl(rctx):
         extra_unfiltered_compile_flags_dict = rctx.attr.extra_unfiltered_compile_flags,
         extra_known_features = rctx.attr.extra_known_features,
         extra_enabled_features = rctx.attr.extra_enabled_features,
+        enable_cpp_modules = rctx.attr.enable_cpp_modules,
     )
     exec_dl_ext = "dylib" if os == "darwin" else "so"
     cc_toolchains_str, toolchain_labels_str = _cc_toolchains_str(
@@ -245,6 +246,19 @@ def llvm_config_impl(rctx):
             "%{toolchain_path_prefix}": llvm_dist_path_prefix,
         },
     )
+
+    # clang-scan-deps wrapper for C++ module dependency scanning.
+    # Bazel 9 invokes the deps scanner with compiler-like flags, but LLVM 14+
+    # clang-scan-deps only accepts its own option set. This wrapper translates
+    # Bazel's calling convention into clang-scan-deps's P1689 interface.
+    if rctx.attr.enable_cpp_modules:
+        rctx.template(
+            "bin/clang_scan_deps_wrapper.sh",
+            rctx.attr._clang_scan_deps_wrapper_sh_tpl,
+            {
+                "%{toolchain_path_prefix}": llvm_dist_path_prefix,
+            },
+        )
 
     if hasattr(rctx, "repo_metadata"):
         return rctx.repo_metadata(reproducible = True)
@@ -446,6 +460,7 @@ cc_toolchain_config(
     extra_enabled_features = {extra_enabled_features},
     cxx_builtin_include_directories = {cxx_builtin_include_directories},
     major_llvm_version = {major_llvm_version},
+    enable_cpp_modules = {enable_cpp_modules},
 )
 
 toolchain(
@@ -549,7 +564,7 @@ filegroup(
 filegroup(name = "all-files-{suffix}", srcs = [":all-components-{suffix}", {extra_files_str}])
 filegroup(name = "archiver-files-{suffix}", srcs = ["{llvm_dist_label_prefix}ar", {extra_files_str}])
 filegroup(name = "assembler-files-{suffix}", srcs = ["{llvm_dist_label_prefix}as", {extra_files_str}])
-filegroup(name = "compiler-files-{suffix}", srcs = [":compiler-components-{suffix}", {extra_files_str}])
+filegroup(name = "compiler-files-{suffix}", srcs = [":compiler-components-{suffix}", {scan_deps_file_str}{extra_files_str}])
 filegroup(name = "dwp-files-{suffix}", srcs = ["{llvm_dist_label_prefix}dwp", {extra_files_str}])
 filegroup(name = "linker-files-{suffix}", srcs = [":linker-components-{suffix}", {extra_files_str}])
 filegroup(name = "objcopy-files-{suffix}", srcs = ["{llvm_dist_label_prefix}objcopy", {extra_files_str}])
@@ -635,6 +650,12 @@ cc_toolchain(
         extra_unfiltered_compile_flags = _list_to_string(_dict_value(toolchain_info.extra_unfiltered_compile_flags_dict, target_pair)),
         extra_known_features = _list_to_string(toolchain_info.extra_known_features),
         extra_enabled_features = _list_to_string(toolchain_info.extra_enabled_features),
+        enable_cpp_modules = toolchain_info.enable_cpp_modules,
+        scan_deps_file_str = (
+            '"%sclang-scan-deps", ' % toolchain_info.llvm_dist_label_prefix
+            if toolchain_info.enable_cpp_modules
+            else ""
+        ),
         extra_files_str = extra_files_str,
         cxx_builtin_include_directories = _list_to_string(filtered_cxx_builtin_include_directories),
         cxx_builtin_include_label = "cxx_builtin_include" if bazel_features.rules.merkle_cache_v2 else "include",

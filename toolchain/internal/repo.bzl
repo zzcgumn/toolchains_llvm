@@ -368,6 +368,17 @@ _compiler_configuration_attrs = {
                "Mostly useful for providing files containing lists of flags, e.g. " +
                "sanitizer ignorelists."),
     ),
+    "enable_cpp_modules": attr.bool(
+        default = False,
+        doc = (
+            "Enable experimental C++ module support via Bazel's " +
+            "`--experimental_cpp_modules` flag. When True, the " +
+            "`-fno-cxx-modules` workaround flag is omitted from `cxx_flags` " +
+            "and the `cpp-module-deps-scanner` tool path is registered. " +
+            "Requires LLVM >= 14. Note: enabling this may affect " +
+            "`use_module_maps`/`layering_check` behavior with C++20."
+        ),
+    ),
     "extra_enabled_features": attr.label_list(
         mandatory = False,
         doc = ("Extra `cc_feature` features to add to this toolchain in an initially " +
@@ -432,6 +443,9 @@ llvm_config_attrs.update({
     ),
     "_cc_wrapper_sh_tpl": attr.label(
         default = "//toolchain:cc_wrapper.sh.tpl",
+    ),
+    "_clang_scan_deps_wrapper_sh_tpl": attr.label(
+        default = "//toolchain:clang_scan_deps_wrapper.sh.tpl",
     ),
 })
 

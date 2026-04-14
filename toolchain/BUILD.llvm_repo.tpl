@@ -165,6 +165,11 @@ filegroup(
 )
 
 filegroup(
+    name = "clang-scan-deps",
+    srcs = ["bin/clang-scan-deps"],
+)
+
+filegroup(
     name = "clang-tidy",
     srcs = ["bin/clang-tidy"],
 )

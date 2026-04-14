@@ -2,3 +2,12 @@ common --incompatible_disallow_empty_glob
 common --nolegacy_external_runfiles
 build --features=layering_check
 common --repositories_without_autoloads=cc_compatibility_proxy
+
+# C++ modules test config. Use with: bazelisk build --config=cpp_modules //modules:all
+build:cpp_modules --extra_toolchains=@llvm_toolchain_cpp_modules//:all
+build:cpp_modules --experimental_cpp_modules
+build:cpp_modules --features=cpp_modules
+# layering_check / use_module_maps generate a "crosstool" system-header module
+# that conflicts with C++20 named modules. Disable them for module builds.
+build:cpp_modules --features=-layering_check
+build:cpp_modules --features=-use_module_maps

@@ -44,7 +44,8 @@ def cc_toolchain_config(
         cxx_builtin_include_directories,
         extra_known_features,
         extra_enabled_features,
-        major_llvm_version):
+        major_llvm_version,
+        enable_cpp_modules = False):
     exec_os_arch_key = _os_arch_pair(exec_os, exec_arch)
     target_os_arch_key = _os_arch_pair(target_os, target_arch)
     _check_os_arch_keys([exec_os_arch_key, target_os_arch_key])
@@ -351,12 +352,13 @@ def cc_toolchain_config(
     else:
         fail("Unknown value passed for stdlib: {stdlib}".format(stdlib = stdlib))
 
-    if major_llvm_version >= 14:
+    if major_llvm_version >= 14 and not enable_cpp_modules:
         # With C++20, Clang defaults to using C++ rather than Clang modules,
         # which breaks Bazel's `use_module_maps` feature, which is used by
-        # `layering_check`. Since Bazel doesn't support C++ modules yet, it
-        # is safe to disable them globally until the toolchain shipped by
-        # Bazel sets this flag on `use_module_maps`.
+        # `layering_check`. Disable modules globally as a workaround unless
+        # the user has explicitly opted in to C++ module support via
+        # `enable_cpp_modules = True`, in which case Bazel's
+        # `--experimental_cpp_modules` flag handles the feature activation.
         # https://github.com/llvm/llvm-project/commit/0556138624edf48621dd49a463dbe12e7101f17d
         cxx_flags.append("-Xclang")
         cxx_flags.append("-fno-cxx-modules")
@@ -395,6 +397,9 @@ def cc_toolchain_config(
         "strip": tools_path_prefix + "llvm-strip",
         "parse_headers": wrapper_bin_prefix + "cc_wrapper.sh",
     }
+
+    if enable_cpp_modules:
+        tool_paths["cpp-module-deps-scanner"] = wrapper_bin_prefix + "clang_scan_deps_wrapper.sh"
 
     # Start-end group linker support:
     # This was added to `lld` in this patch: http://reviews.llvm.org/D18814
