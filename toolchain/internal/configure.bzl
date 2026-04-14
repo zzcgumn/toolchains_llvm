@@ -658,7 +658,20 @@ cc_toolchain(
         ),
         extra_files_str = extra_files_str,
         cxx_builtin_include_directories = _list_to_string(filtered_cxx_builtin_include_directories),
-        cxx_builtin_include_label = "cxx_builtin_include" if bazel_features.rules.merkle_cache_v2 else "include",
+        # When cpp_modules is enabled, use the file-level :include glob instead
+        # of :cxx_builtin_include (directory entries). With a shared
+        # toolchain_root the LLVM dist lives in a different Bazel repo; Bazel's
+        # sandbox creates a symlink for directory-level artifacts that points
+        # outside the sandbox root, so the compiler cannot follow it. Individual
+        # file entries declared via :include are each added as explicit sandbox
+        # inputs and are always reachable. :system_module_map expects directory
+        # entries (Bazel 9), but use_module_maps is disabled for cpp_modules
+        # builds, so the generated module map is never applied.
+        cxx_builtin_include_label = (
+            "include"
+            if toolchain_info.enable_cpp_modules
+            else ("cxx_builtin_include" if bazel_features.rules.merkle_cache_v2 else "include")
+        ),
         lib_label = "lib" if bazel_features.rules.merkle_cache_v2 else "lib_legacy",
         extra_compiler_files = ("\"%s\"," % str(toolchain_info.extra_compiler_files)) if toolchain_info.extra_compiler_files else "",
         major_llvm_version = major_llvm_version,
