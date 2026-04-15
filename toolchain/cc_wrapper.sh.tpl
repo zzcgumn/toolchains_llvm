@@ -141,11 +141,6 @@ for ((i = 0; i <= $#; i++)); do
   fi
 done
 
-# When the toolchain has C++ module support enabled, remap sandbox-absolute
-# source paths to relative paths so that .pcm files are relocatable across
-# different sandbox roots and produce bit-identical output for remote caching.
-%{cpp_modules_path_prefix_map}
-
 # Call the C++ compiler.
 "${cmd[@]}"
 

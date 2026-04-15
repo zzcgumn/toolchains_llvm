@@ -240,23 +240,11 @@ def llvm_config_impl(rctx):
     else:
         cc_wrapper_tpl = rctx.attr._cc_wrapper_sh_tpl
 
-    # When cpp_modules are enabled, inject a -ffile-prefix-map flag that strips
-    # the sandbox-absolute working directory from all embedded paths (source
-    # file references in .pcm files, __FILE__ macros, debug info, etc.).
-    # This makes .pcm files relocatable across sandbox roots and produces
-    # bit-identical output suitable for remote caching.
-    cpp_modules_path_prefix_map = (
-        'cmd+=("-ffile-prefix-map=$(pwd)/=")'
-        if rctx.attr.enable_cpp_modules
-        else ""
-    )
-
     rctx.template(
         "bin/cc_wrapper.sh",
         cc_wrapper_tpl,
         {
             "%{toolchain_path_prefix}": llvm_dist_path_prefix,
-            "%{cpp_modules_path_prefix_map}": cpp_modules_path_prefix_map,
         },
     )
 
@@ -368,7 +356,18 @@ def _cc_toolchain_str(
     # visible via the "built_in_include_directories" attribute of CcToolchainInfo as well as to keep
     # them in sync with the directories included in the system module map generated for the stricter
     # "layering_check" feature.
-    toolchain_path_prefix = "%workspace%/" + toolchain_info.llvm_dist_path_prefix
+    # For cpp_modules toolchains, use a relative path (no %workspace%/ prefix).
+    # This causes clang to receive relative -isystem flags for stdlib headers.
+    # Combined with -no-canonical-prefixes (already in the toolchain's
+    # unfiltered_compile_flags), clang's FileManager stores the relative path
+    # in .pcm records instead of the sandbox-absolute canonical path.  The
+    # relative path is valid in any sandbox because commit 98b9906 changed
+    # cxx_builtin_include_label to "include" (a file-level glob), so every
+    # header file is an explicit sandbox input at the same relative location.
+    if toolchain_info.enable_cpp_modules and not use_absolute_paths_llvm:
+        toolchain_path_prefix = toolchain_info.llvm_dist_path_prefix
+    else:
+        toolchain_path_prefix = "%workspace%/" + toolchain_info.llvm_dist_path_prefix
     llvm_version = toolchain_info.llvm_version
     major_llvm_version = int(llvm_version.split(".")[0])
     target_system_name = {

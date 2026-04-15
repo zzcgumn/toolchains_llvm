@@ -457,18 +457,6 @@ def cc_toolchain_config(
     if compiler_configuration["extra_unfiltered_compile_flags"] != None:
         unfiltered_compile_flags.extend(_fmt_flags(compiler_configuration["extra_unfiltered_compile_flags"], toolchain_path_prefix))
 
-    if enable_cpp_modules:
-        # Disable Clang's PCM source-file validation for all C++ compilation
-        # actions. .pcm files embed the canonical (sandbox-absolute) path of the
-        # module interface unit (.cppm). When a downstream sandbox loads the .pcm
-        # to import the module, that sandbox does not contain the original .cppm
-        # (only the .pcm is declared as an input), so Clang's validation — which
-        # tries to stat the embedded source path — always fails. Bazel's own
-        # dependency graph guarantees module freshness; this Clang-level check is
-        # redundant and must be suppressed.
-        # Note: placed after user overrides so it cannot be accidentally removed
-        # by a user-supplied cxx_flags replacement.
-        cxx_flags.extend(["-Xclang", "-fno-validate-pch"])
 
     # Source: https://cs.opensource.google/bazel/bazel/+/master:tools/cpp/unix_cc_toolchain_config.bzl
     unix_cc_toolchain_config(
