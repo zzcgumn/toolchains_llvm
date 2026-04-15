@@ -239,11 +239,24 @@ def llvm_config_impl(rctx):
         cc_wrapper_tpl = rctx.attr._darwin_cc_wrapper_sh_tpl
     else:
         cc_wrapper_tpl = rctx.attr._cc_wrapper_sh_tpl
+
+    # When cpp_modules are enabled, inject a -ffile-prefix-map flag that strips
+    # the sandbox-absolute working directory from all embedded paths (source
+    # file references in .pcm files, __FILE__ macros, debug info, etc.).
+    # This makes .pcm files relocatable across sandbox roots and produces
+    # bit-identical output suitable for remote caching.
+    cpp_modules_path_prefix_map = (
+        'cmd+=("-ffile-prefix-map=$(pwd)/=")'
+        if rctx.attr.enable_cpp_modules
+        else ""
+    )
+
     rctx.template(
         "bin/cc_wrapper.sh",
         cc_wrapper_tpl,
         {
             "%{toolchain_path_prefix}": llvm_dist_path_prefix,
+            "%{cpp_modules_path_prefix_map}": cpp_modules_path_prefix_map,
         },
     )
 
