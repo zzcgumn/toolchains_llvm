@@ -745,11 +745,6 @@ _llvm_distributions = {
     "LLVM-22.1.1-Linux-X64.tar.xz": "sha256:efc4d945744f951df00ec72c5b31da5d5a2eaf1d53cc7c9d0644f93f0f9e817d",
     "LLVM-22.1.1-macOS-ARM64.tar.xz": "sha256:3839802601439300fc8d1d378bc26732e879e1ca80a220f7d6764ed229053e92",
 
-    # 22.1.3
-    "LLVM-22.1.3-Linux-ARM64.tar.xz": "sha256:4dc01fbb46084b3c3304a51e8412903da3735d5a276bcdd35333bc38bad8a8b6",
-    "LLVM-22.1.3-Linux-X64.tar.xz": "sha256:6e776c396895837a168a36d13e0b0e4552680eda58d8dab6aa5fb75e2c3d13ea",
-    "LLVM-22.1.3-macOS-ARM64.tar.xz": "sha256:881e524d374cd2befd95888db1846e3150b0728fa842b90bb15bafc0b19c075c",
-
     # Refer to variable declaration on how to update!
     # Example update (without download): utils/llvm_checksums.sh -D -g -t /tmp/llvm -v 21.1.5
 }
